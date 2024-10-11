@@ -4,6 +4,7 @@ const AttendanceLocal = require("../modelsLocal/AttendanceLocal");
 const IdInformationLocal = require("../modelsLocal/IdInformationLocal");
 const ViolationLocal = require("../modelsLocal/ViolationLocal");
 const ViolationListLocal = require("../modelsLocal/ViolationListLocal");
+const { handleAttendanceSync } = require("../syncronize");
 
 async function submitAttendance(req, res) {
   const employeeId = req.params.employeeId;
@@ -55,6 +56,8 @@ async function submitAttendance(req, res) {
 
     // Add the Base64 data URL to the employeeData object
     const picture = `data:image/png;base64,${profilePictureBase64}`;
+
+    handleAttendanceSync();
 
     // Render the view with attendance, employee data, violations, and updated safety man-hours
     res.json({

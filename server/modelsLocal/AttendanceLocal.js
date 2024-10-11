@@ -17,6 +17,10 @@ const AttendanceLocal = localDb.define("Attendance", {
     type: DataTypes.ENUM("TIME-IN", "TIME-OUT"),
     allowNull: false,
   },
+  synced: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false, // Make sure to include this if you're using the synced column
+  },
 });
 
 module.exports = AttendanceLocal;

@@ -11,7 +11,6 @@ const cors = require("cors");
 const path = require("path");
 const bodyParser = require("body-parser");
 
-
 // Import utility functions and models
 require("./utils/associations");
 
@@ -67,20 +66,10 @@ app.use(
 
 app.use(express.json()); // Middleware to parse JSON request bodies
 
-// Middleware to check authentication
-const { isAuthenticated } = require("./middlewares/auth");
-app.use("/requests/*", isAuthenticated);
-app.use("/marketing_Dashboard/*", isAuthenticated);
-app.use("/dispatching_Dashboard/*", isAuthenticated);
-app.use("/receiving_Dashboard/*", isAuthenticated);
-app.use("/certification_Dashboard/*", isAuthenticated);
-app.use("/hr_Dashboard/*", isAuthenticated);
-
 // Import API routes
 const apiRoutes = require("./routes/api");
 
-const syncronize = require("./syncronize");
-
+// const syncronize = require("./syncronize");
 
 // Use the /api prefix for all API routes
 app.use("/api", apiRoutes);
@@ -89,21 +78,18 @@ app.use("/api", apiRoutes);
 const sequelize = require("./config/database");
 const localDb = require("./config/databaseLocal");
 
-
-
 // Function to initialize the application
 async function initializeApp() {
   try {
     console.log("Syncing models to the database...");
     // await sequelize.sync({ alter: true });
+
     // await localDb.sync({ alter: true });
     console.log("Models synced successfully.");
   } catch (error) {
     console.error("Error syncing models:", error);
   }
 }
-
-
 
 // Call the function to initialize the application
 initializeApp();

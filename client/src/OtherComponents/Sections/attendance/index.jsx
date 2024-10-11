@@ -5,8 +5,7 @@ import React, {
   useMemo,
   useRef,
 } from "react";
-import { Box, Typography } from "@mui/material";
-import { createTheme } from "@mui/material/styles";
+import { Box, Typography, useTheme } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid"; // Import DataGrid
 import axios from "axios";
 import { format } from "date-fns"; // Import date-fns for date formatting
@@ -15,14 +14,11 @@ import timeInAudio from "../../../images/time-in.mp3";
 import timeOutAudio from "../../../images/time-out.mp3"; // Renamed to avoid conflict with variable names
 import CustomDataGridStyles from "../../CustomDataGridStyles";
 import { formatTime } from "../../Functions";
-import { tokens, themeSettings } from "../../../theme";
+import { tokens } from "../../../theme";
 
 const Attendance = () => {
   const apiUrl = useMemo(() => process.env.REACT_APP_API_URL, []);
-  const currentHour = new Date().getHours();
-  const isDayTime = currentHour >= 6 && currentHour < 18; // 6 AM to 6 PM
-  const [mode, setMode] = useState(isDayTime ? "light" : "dark");
-  const theme = useMemo(() => createTheme(themeSettings(mode)), [mode]);
+  const theme = useTheme();
   const colors = tokens(theme.palette.mode);
 
   const [loading, setLoading] = useState(false);
@@ -49,19 +45,6 @@ const Attendance = () => {
     }
   }, []);
 
-  useEffect(() => {
-    const updateTheme = () => {
-      const hour = new Date().getHours();
-      setMode(hour >= 6 && hour < 18 ? "light" : "dark");
-    };
-
-    // Update theme on initial load and every hour
-    updateTheme();
-    const intervalId = setInterval(updateTheme, 3600000); // Check every hour
-
-    return () => clearInterval(intervalId); // Cleanup on unmount
-  }, []);
-
   // Fetch data function
   const fetchData = useCallback(
     async (inputId) => {
@@ -70,6 +53,8 @@ const Attendance = () => {
         const response = await axios.post(
           `${apiUrl}/api/attendance/${inputId}`
         );
+
+        console.log(response);
         setAttendanceData(response.data.attendance);
         setEmployeeData(response.data.employeeData);
         setPicture(response.data.picture);
@@ -90,6 +75,7 @@ const Attendance = () => {
     try {
       const response = await axios.get(`${apiUrl}/api/attendance`);
 
+      console.log(response);
       const sortedData = response.data.filteredData.sort((a, b) => {
         // Convert `createdAt` to Date objects for both a and b
         const dateA = new Date(a.createdAt);
@@ -235,9 +221,9 @@ const Attendance = () => {
 
     return {
       id: index + 1, // Ensure a unique id for each row
-      employeeName: `${item.IdInformation.last_name}, ${item.IdInformation.first_name} ${item.IdInformation.middle_name}`,
+      employeeName: `${item.IdInformationLocal.last_name}, ${item.IdInformationLocal.first_name} ${item.IdInformationLocal.middle_name}`,
       employeeId: item.employee_id,
-      designation: item.IdInformation.designation,
+      designation: item.IdInformationLocal.designation,
       date: dateFormatted, // Add formatted date
       timeIn: timeInFormatted, // Adjusted timeIn
       timeInRaw: createdAt,
@@ -473,7 +459,7 @@ const Attendance = () => {
                           key={index}
                           sx={{ fontSize: "50px", color: "red" }}
                         >
-                          {v.ViolationList.description}
+                          {v.ViolationListLocal.description}
                         </Box>
                       ))}
                     </Box>
