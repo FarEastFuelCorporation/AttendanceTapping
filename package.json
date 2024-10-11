@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "start": " cd server && npm install && node server.js",
+    "dev": "concurrently \"cd server && npm run dev\" \"cd client && npm start\"",
+    "heroku-postbuild": "cd client && npm install && npm run build"
+  },
+  "dependencies": {
+    "concurrently": "^9.0.1"
+  }
+}
