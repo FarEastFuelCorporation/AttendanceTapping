@@ -48,12 +48,12 @@
     "web-vitals": "^2.1.4",
     "yup": "^1.4.0"
   },
-  "scripts": {
-    "start": "cross-env BROWSER=none react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
+"scripts": {
+  "start": "cross-env BROWSER=none react-scripts start & timeout /t 10 & start chrome --kiosk --start-fullscreen --force-device-scale-factor=0.8 http://192.168.1.243:3000/attendance",
+  "build": "react-scripts build",
+  "test": "react-scripts test",
+  "eject": "react-scripts eject"
+}
   "eslintConfig": {
     "extends": [
       "react-app",
