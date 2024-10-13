@@ -446,6 +446,8 @@ const Attendance = () => {
               <video
                 ref={videoRef}
                 src={birthday}
+                autoPlay
+                loop
                 muted
                 style={{
                   position: "absolute",
