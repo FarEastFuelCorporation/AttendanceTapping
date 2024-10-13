@@ -62,6 +62,7 @@ const Attendance = () => {
   const [birthdayCelebrants, setBirthdayCelebrants] = useState([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPlayingVideo, setIsPlayingVideo] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
   const audioRef = useRef(null);
   const videoRef = useRef(null);
   const debounceTimeout = useRef(null);
@@ -121,15 +122,17 @@ const Attendance = () => {
           `${apiUrl}/api/attendance/${inputId}`
         );
 
+        setShowVideo(false);
         setAttendanceData(response.data.attendance);
         setEmployeeData(response.data.employeeData);
         setPicture(response.data.picture);
         setViolationsData(response.data.violations);
         setShowDataList(false);
         setShowData(true);
-        console.log(response.data);
+
         const birthday = new Date(response.data.employeeData.birthday);
         if (isToday(birthday)) {
+          setShowVideo(true);
           toggleAudioAndVideo();
         }
       } catch (error) {
@@ -439,7 +442,7 @@ const Attendance = () => {
               height: "calc(100vh - 100px)",
             }}
           >
-            {isPlaying && (
+            {showVideo && (
               <video
                 ref={videoRef}
                 src={birthday}
