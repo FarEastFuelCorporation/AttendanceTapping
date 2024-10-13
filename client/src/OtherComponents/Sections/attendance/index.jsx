@@ -72,7 +72,7 @@ const Attendance = () => {
   const timeInRef = useRef(null);
   const timeOutRef = useRef(null);
 
-  const toggleAudioAndVideo = () => {
+  const toggleAudioAndVideo = useCallback(() => {
     if (isPlaying) {
       audioRef.current.pause(); // Pause the audio
       videoRef.current.pause(); // Pause the video
@@ -81,8 +81,8 @@ const Attendance = () => {
       audioRef.current.play(); // Play the audio
       videoRef.current.play(); // Play the video
     }
-    setIsPlaying(!isPlaying); // Toggle the playing state
-  };
+    setIsPlaying((prev) => !prev); // Toggle the playing state
+  }, [isPlaying]); // Include isPlaying as a dependency
 
   // Set initial mode based on daytime
   useEffect(() => {
@@ -115,12 +115,12 @@ const Attendance = () => {
       // Cleanup function to clear the timeout
       return () => clearTimeout(timeoutId);
     }
-  }, [showData]);
+  }, [showData, isPlaying, toggleAudioAndVideo]);
 
   // Fetch data function
   const fetchData = useCallback(
     async (inputId) => {
-      // setLoading(true);
+      setLoading(true);
       try {
         const response = await axios.post(
           `${apiUrl}/api/attendance/${inputId}`
@@ -137,13 +137,14 @@ const Attendance = () => {
         setPicture(response.data.picture);
         setViolationsData(response.data.violations);
         setShowDataList(false);
+        setShowData(true);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
-      setShowData(true);
-      // setLoading(false);
+
+      setLoading(false);
     },
-    [apiUrl]
+    [apiUrl, toggleAudioAndVideo]
   );
 
   // Fetch data function
