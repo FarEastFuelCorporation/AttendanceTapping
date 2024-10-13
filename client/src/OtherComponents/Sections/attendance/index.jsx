@@ -126,7 +126,7 @@ const Attendance = () => {
           `${apiUrl}/api/attendance/${inputId}`
         );
         const birthday = new Date(
-          response.data.employeeData.IdInformation.birthday
+          response.data.employeeData.IdInformationLocal.birthday
         );
         if (isToday(birthday)) {
           toggleAudioAndVideo();
@@ -163,10 +163,7 @@ const Attendance = () => {
         const createdAt = new Date(item.createdAt);
         const dateFormatted = format(createdAt, "MMMM dd, yyyy");
         const timeInFormatted = format(createdAt, "hh:mm:ss a");
-
-        const birthday = new Date(item.IdInformation.birthday); // Parse birthday
-        console.log(birthday);
-        console.log(isToday(birthday));
+        const birthday = new Date(item.IdInformationLocal?.birthday); // Parse birthday
 
         setIsPlayingVideo(false);
 
@@ -175,25 +172,23 @@ const Attendance = () => {
           const age = calculateAge(birthday); // Calculate age
           newBirthdayCelebrants.push({
             employeeId: item.employee_id,
-            employeeName: `${item.IdInformation.last_name}, ${item.IdInformation.first_name} ${item.IdInformation.middle_name}`,
-            designation: item.IdInformation.designation,
+            employeeName: `${item.IdInformationLocal.last_name}, ${item.IdInformationLocal.first_name} ${item.IdInformationLocal.middle_name}`,
+            designation: item.IdInformationLocal.designation,
             age,
           });
         }
 
         return {
           id: index + 1,
-          employeeName: `${item.IdInformation.last_name}, ${item.IdInformation.first_name} ${item.IdInformation.middle_name}`,
+          employeeName: `${item.IdInformationLocal.last_name}, ${item.IdInformationLocal.first_name} ${item.IdInformationLocal.middle_name}`,
           employeeId: item.employee_id,
-          designation: item.IdInformation.designation,
+          designation: item.IdInformationLocal.designation,
           date: dateFormatted,
           timeIn: timeInFormatted,
           timeInRaw: createdAt,
           status: item.status,
         };
       });
-
-      console.log(newBirthdayCelebrants);
 
       setdataList(rows);
       setBirthdayCelebrants(newBirthdayCelebrants); // Set birthday celebrants once at the end
