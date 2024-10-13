@@ -60,6 +60,7 @@ const Attendance = () => {
   const [dataList, setdataList] = useState([]);
   const [urlInput, setUrlInput] = useState("");
   const [birthdayCelebrants, setBirthdayCelebrants] = useState([]);
+  const [isBirthday, setIsBirthday] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPlayingVideo, setIsPlayingVideo] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
@@ -122,6 +123,7 @@ const Attendance = () => {
           `${apiUrl}/api/attendance/${inputId}`
         );
 
+        setIsBirthday(false);
         setShowVideo(false);
         setAttendanceData(response.data.attendance);
         setEmployeeData(response.data.employeeData);
@@ -132,6 +134,7 @@ const Attendance = () => {
 
         const birthday = new Date(response.data.employeeData.birthday);
         if (isToday(birthday)) {
+          setIsBirthday(true);
           setShowVideo(true);
           toggleAudioAndVideo();
         }
@@ -240,10 +243,13 @@ const Attendance = () => {
         clearTimeout(idleTimeout.current);
       }
 
-      // Set a new idle timeout to refresh the page after 10 seconds of inactivity
+      // Set timeout duration based on conditions
+      const timeoutDuration = showData ? (isBirthday ? 15000 : 5000) : 15000;
+
+      // Set a new idle timeout to refresh the page after the specified duration
       idleTimeout.current = setTimeout(() => {
-        window.location.reload(); // Reload the page after 10 seconds of inactivity
-      }, 15000);
+        window.location.reload(); // Reload the page after the specified inactivity duration
+      }, timeoutDuration);
     };
 
     // Add event listeners for user activity
