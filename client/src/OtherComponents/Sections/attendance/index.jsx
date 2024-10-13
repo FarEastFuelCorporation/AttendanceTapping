@@ -267,7 +267,7 @@ const Attendance = () => {
         clearTimeout(idleTimeout.current);
       }
     };
-  }, []);
+  }, [isBirthday, showData]);
 
   // Define columns for DataGrid
   const columns = [
