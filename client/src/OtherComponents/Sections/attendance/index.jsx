@@ -101,15 +101,10 @@ const Attendance = () => {
       if (isPlaying) {
         // Set timeout to update states after 5 seconds
         timeoutId = setTimeout(() => {
-          setShowData(false);
-          setShowDataList(true);
           toggleAudioAndVideo();
         }, 15000);
       } else {
-        timeoutId = setTimeout(() => {
-          setShowData(false);
-          setShowDataList(true);
-        }, 5000);
+        timeoutId = setTimeout(() => {}, 5000);
       }
 
       // Cleanup function to clear the timeout
@@ -125,12 +120,6 @@ const Attendance = () => {
         const response = await axios.post(
           `${apiUrl}/api/attendance/${inputId}`
         );
-        const birthday = new Date(
-          response.data.employeeData.IdInformationLocal.birthday
-        );
-        if (isToday(birthday)) {
-          toggleAudioAndVideo();
-        }
 
         setAttendanceData(response.data.attendance);
         setEmployeeData(response.data.employeeData);
@@ -138,6 +127,11 @@ const Attendance = () => {
         setViolationsData(response.data.violations);
         setShowDataList(false);
         setShowData(true);
+        console.log(response.data);
+        const birthday = new Date(response.data.employeeData.birthday);
+        if (isToday(birthday)) {
+          toggleAudioAndVideo();
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
       }
