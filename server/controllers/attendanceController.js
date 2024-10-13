@@ -1,16 +1,17 @@
 // controllers/attendanceController.js
 
-const Attendance = require("../models/Attendance");
-const IdInformation = require("../models/IdInformation");
-const Violation = require("../models/Violation");
-const ViolationList = require("../models/ViolationList");
+const AttendanceLocal = require("../modelsLocal/AttendanceLocal");
+const IdInformationLocal = require("../modelsLocal/IdInformationLocal");
+const ViolationLocal = require("../modelsLocal/ViolationLocal");
+const ViolationListLocal = require("../modelsLocal/ViolationListLocal");
+const { handleAttendanceSync } = require("../syncronize");
 
 async function submitAttendance(req, res) {
   const employeeId = req.params.employeeId;
 
   try {
     // Check the previous attendance status of the employee
-    const previousAttendance = await Attendance.findOne({
+    const previousAttendance = await AttendanceLocal.findOne({
       where: { employee_id: employeeId },
       order: [["createdAt", "DESC"]],
       limit: 1,
@@ -26,23 +27,23 @@ async function submitAttendance(req, res) {
     }
 
     // Insert the attendance information into the attendance table
-    const attendance = await Attendance.create({
+    const attendance = await AttendanceLocal.create({
       employee_id: employeeId,
       status: status,
     });
 
     // Retrieve employee data
-    const employeeData = await IdInformation.findOne({
+    const employeeData = await IdInformationLocal.findOne({
       where: { employee_id: employeeId },
     });
 
     // Retrieve violation data for the employee if it exists
-    const violations = await Violation.findAll({
+    const violations = await ViolationLocal.findAll({
       where: { employee_id: employeeId },
       include: [
         {
-          model: ViolationList,
-          as: "ViolationList", // Specify the alias used in the association
+          model: ViolationListLocal,
+          as: "ViolationListLocal", // Specify the alias used in the association
         },
       ],
     });
@@ -55,6 +56,8 @@ async function submitAttendance(req, res) {
 
     // Add the Base64 data URL to the employeeData object
     const picture = `data:image/png;base64,${profilePictureBase64}`;
+
+    handleAttendanceSync();
 
     // Render the view with attendance, employee data, violations, and updated safety man-hours
     res.json({
@@ -73,11 +76,11 @@ async function submitAttendance(req, res) {
 async function attendance(req, res) {
   try {
     // Fetch attendance and employee data using Sequelize
-    const results = await Attendance.findAll({
+    const results = await AttendanceLocal.findAll({
       include: [
         {
-          model: IdInformation,
-          as: "IdInformation",
+          model: IdInformationLocal,
+          as: "IdInformationLocal",
           attributes: [
             "employee_id",
             "first_name",
