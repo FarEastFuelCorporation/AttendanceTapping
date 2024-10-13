@@ -9,7 +9,7 @@ const CustomDataGridStyles = ({ children }) => {
     <Box
       m="40px 0 0 0"
       height="75vh"
-      width="100% !important"
+      width="100%"
       sx={{
         "& .MuiDataGrid-root": {
           border: "none",
@@ -25,6 +25,9 @@ const CustomDataGridStyles = ({ children }) => {
         },
         "& .MuiDataGrid-virtualScroller": {
           backgroundColor: colors.primary[400],
+          overflowY: "auto", // Ensure scrolling works
+          scrollbarWidth: "none", // Firefox
+          msOverflowStyle: "none", // IE 10+
         },
         "& .MuiDataGrid-footerContainer": {
           borderTop: "none",

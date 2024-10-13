@@ -4,22 +4,51 @@ import React, {
   useCallback,
   useMemo,
   useRef,
+  useContext,
 } from "react";
 import { Box, Typography, useTheme } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid"; // Import DataGrid
 import axios from "axios";
 import { format } from "date-fns"; // Import date-fns for date formatting
 import LoadingSpinner from "../../LoadingSpinner";
+import birthday from "../../../images/birthday.mp4";
+import happyBirthday from "../../../images/happyBirthday.mp4";
 import timeInAudio from "../../../images/time-in.mp3";
 import timeOutAudio from "../../../images/time-out.mp3"; // Renamed to avoid conflict with variable names
 import CustomDataGridStyles from "../../CustomDataGridStyles";
 import { formatTime } from "../../Functions";
-import { tokens } from "../../../theme";
+import { tokens, ColorModeContext } from "../../../theme";
+
+const isToday = (date) => {
+  const today = new Date();
+  return (
+    date.getDate() === today.getDate() && date.getMonth() === today.getMonth()
+  );
+};
+
+const calculateAge = (birthday) => {
+  const today = new Date();
+  let age = today.getFullYear() - birthday.getFullYear();
+  const monthDiff = today.getMonth() - birthday.getMonth();
+
+  // Adjust age if the birthday hasn't occurred this year yet
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && today.getDate() < birthday.getDate())
+  ) {
+    age--;
+  }
+  return age;
+};
 
 const Attendance = () => {
   const apiUrl = useMemo(() => process.env.REACT_APP_API_URL, []);
+  const currentHour = new Date().getHours();
+  const isDayTime = currentHour >= 6 && currentHour < 18; // 6 AM to 6 PM
+
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  const colorMode = useContext(ColorModeContext);
 
   const [loading, setLoading] = useState(false);
   const [showData, setShowData] = useState(false);
@@ -30,6 +59,11 @@ const Attendance = () => {
   const [violationsData, setViolationsData] = useState([]);
   const [dataList, setdataList] = useState([]);
   const [urlInput, setUrlInput] = useState("");
+  const [birthdayCelebrants, setBirthdayCelebrants] = useState([]);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlayingVideo, setIsPlayingVideo] = useState(false);
+  const audioRef = useRef(null);
+  const videoRef = useRef(null);
   const debounceTimeout = useRef(null);
   const idleTimeout = useRef(null);
   const dataGridRef = useRef(null);
@@ -38,23 +72,66 @@ const Attendance = () => {
   const timeInRef = useRef(null);
   const timeOutRef = useRef(null);
 
-  // Scroll to the bottom whenever the rows change
-  useEffect(() => {
-    if (dataGridRef.current) {
-      dataGridRef.current.scrollTop = dataGridRef.current.scrollHeight;
+  const toggleAudioAndVideo = () => {
+    if (isPlaying) {
+      audioRef.current.pause(); // Pause the audio
+      videoRef.current.pause(); // Pause the video
+    } else {
+      audioRef.current.currentTime = 0; // Reset audio to the beginning
+      audioRef.current.play(); // Play the audio
+      videoRef.current.play(); // Play the video
     }
-  }, []);
+    setIsPlaying(!isPlaying); // Toggle the playing state
+  };
+
+  // Set initial mode based on daytime
+  useEffect(() => {
+    if (isDayTime) {
+      colorMode.toggleColorMode(); // Toggle to light mode if daytime
+    } else {
+      colorMode.toggleColorMode(); // Toggle to dark mode if nighttime
+    }
+  }, [isDayTime, colorMode]);
+
+  // Effect to trigger when showData changes
+  useEffect(() => {
+    if (showData) {
+      let timeoutId;
+
+      if (isPlaying) {
+        // Set timeout to update states after 5 seconds
+        timeoutId = setTimeout(() => {
+          setShowData(false);
+          setShowDataList(true);
+          toggleAudioAndVideo();
+        }, 15000);
+      } else {
+        timeoutId = setTimeout(() => {
+          setShowData(false);
+          setShowDataList(true);
+        }, 5000);
+      }
+
+      // Cleanup function to clear the timeout
+      return () => clearTimeout(timeoutId);
+    }
+  }, [showData]);
 
   // Fetch data function
   const fetchData = useCallback(
     async (inputId) => {
-      setLoading(true);
+      // setLoading(true);
       try {
         const response = await axios.post(
           `${apiUrl}/api/attendance/${inputId}`
         );
+        const birthday = new Date(
+          response.data.employeeData.IdInformation.birthday
+        );
+        if (isToday(birthday)) {
+          toggleAudioAndVideo();
+        }
 
-        console.log(response);
         setAttendanceData(response.data.attendance);
         setEmployeeData(response.data.employeeData);
         setPicture(response.data.picture);
@@ -64,32 +141,68 @@ const Attendance = () => {
         console.error("Error fetching data:", error);
       }
       setShowData(true);
-      setLoading(false);
+      // setLoading(false);
     },
     [apiUrl]
   );
 
   // Fetch data function
   const fetchDataList = useCallback(async () => {
-    setLoading(true);
     try {
       const response = await axios.get(`${apiUrl}/api/attendance`);
 
-      console.log(response);
       const sortedData = response.data.filteredData.sort((a, b) => {
-        // Convert `createdAt` to Date objects for both a and b
         const dateA = new Date(a.createdAt);
         const dateB = new Date(b.createdAt);
-
-        // Sort in descending order (latest dates first)
-        return dateB - dateA;
+        return dateB - dateA; // Sort in descending order
       });
 
-      setdataList(sortedData);
+      const newBirthdayCelebrants = []; // Temp array to collect birthday celebrants
+
+      const rows = sortedData.map((item, index) => {
+        const createdAt = new Date(item.createdAt);
+        const dateFormatted = format(createdAt, "MMMM dd, yyyy");
+        const timeInFormatted = format(createdAt, "hh:mm:ss a");
+
+        const birthday = new Date(item.IdInformation.birthday); // Parse birthday
+        console.log(birthday);
+        console.log(isToday(birthday));
+
+        setIsPlayingVideo(false);
+
+        // Check if the birthday is today
+        if (isToday(birthday)) {
+          const age = calculateAge(birthday); // Calculate age
+          newBirthdayCelebrants.push({
+            employeeId: item.employee_id,
+            employeeName: `${item.IdInformation.last_name}, ${item.IdInformation.first_name} ${item.IdInformation.middle_name}`,
+            designation: item.IdInformation.designation,
+            age,
+          });
+        }
+
+        return {
+          id: index + 1,
+          employeeName: `${item.IdInformation.last_name}, ${item.IdInformation.first_name} ${item.IdInformation.middle_name}`,
+          employeeId: item.employee_id,
+          designation: item.IdInformation.designation,
+          date: dateFormatted,
+          timeIn: timeInFormatted,
+          timeInRaw: createdAt,
+          status: item.status,
+        };
+      });
+
+      console.log(newBirthdayCelebrants);
+
+      setdataList(rows);
+      setBirthdayCelebrants(newBirthdayCelebrants); // Set birthday celebrants once at the end
+
+      // Set video playing state based on the presence of birthday celebrants
+      setIsPlayingVideo(newBirthdayCelebrants.length > 0);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
-    setLoading(false);
   }, [apiUrl]);
 
   // Handle form input change and submit (with debouncing)
@@ -137,7 +250,7 @@ const Attendance = () => {
       // Set a new idle timeout to refresh the page after 10 seconds of inactivity
       idleTimeout.current = setTimeout(() => {
         window.location.reload(); // Reload the page after 10 seconds of inactivity
-      }, 10000);
+      }, 15000);
     };
 
     // Add event listeners for user activity
@@ -213,28 +326,19 @@ const Attendance = () => {
     // Add other fields as necessary
   ];
 
-  // Prepare rows for DataGrid
-  const rows = dataList.map((item, index) => {
-    const createdAt = new Date(item.createdAt); // Parse the createdAt date
-    const dateFormatted = format(createdAt, "MMMM dd, yyyy"); // Format date as 'October 10, 2024'
-    const timeInFormatted = format(createdAt, "hh:mm:ss a"); // Format time as '12:00:00 AM'
-
-    return {
-      id: index + 1, // Ensure a unique id for each row
-      employeeName: `${item.IdInformationLocal.last_name}, ${item.IdInformationLocal.first_name} ${item.IdInformationLocal.middle_name}`,
-      employeeId: item.employee_id,
-      designation: item.IdInformationLocal.designation,
-      date: dateFormatted, // Add formatted date
-      timeIn: timeInFormatted, // Adjusted timeIn
-      timeInRaw: createdAt,
-      status: item.status,
-    };
-  });
+  const today = new Date();
 
   return (
-    <Box>
+    <Box
+      sx={{
+        height: "calc(100vh - 64px)",
+        scrollbarWidth: "none", // Firefox
+        msOverflowStyle: "none", // IE 10+
+      }}
+    >
       {loading && <LoadingSpinner isLoading={loading} />}
       {/* Input for URL without form */}
+      <audio ref={audioRef} src={happyBirthday} />
       <input
         type="text"
         id="urlInput"
@@ -253,46 +357,89 @@ const Attendance = () => {
           left: 0,
           position: "relative",
           display: "flex",
+          flexDirection: "column",
           justifyContent: "center",
         }}
       >
         {showDataList && (
           <Box sx={{ width: "100%", paddingX: "40px" }}>
+            {isPlayingVideo && (
+              <video
+                src={birthday}
+                autoPlay
+                loop // Add this attribute to loop the video
+                muted // Ensure the video is muted for auto-play
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  minWidth: "100%",
+                  minHeight: "100%",
+                  width: "auto",
+                  height: "auto",
+                  zIndex: -1,
+                  transform: "translate(-50%, -50%)",
+                }}
+              />
+            )}
+            {birthdayCelebrants.length > 0 && (
+              <Box sx={{ paddingX: "20px", marginTop: "20px" }}>
+                <Typography sx={{ fontSize: "40px" }}>
+                  Birthday Celebrants: {format(today, "MMMM dd, yyyy")}
+                </Typography>
+                <ul style={{ fontSize: "30px", margin: 0 }}>
+                  {birthdayCelebrants.map((celebrant, index) => (
+                    <li
+                      key={index}
+                      className="blink.birthday"
+                      style={{ color: "red" }}
+                    >
+                      <b>{celebrant.employeeName}</b> - Age: {celebrant.age} y/o
+                    </li>
+                  ))}
+                </ul>
+              </Box>
+            )}
             <CustomDataGridStyles>
               <Box
                 sx={{
                   display: "flex",
                   justifyContent: "space-between",
                   px: "20px",
+                  marginTop: "-40px",
                 }}
               >
-                <Typography sx={{ fontSize: "40px" }}>
+                <Typography sx={{ fontSize: "40px", fontWeight: "bold" }}>
                   Employee On Duty
                 </Typography>
-                <Typography sx={{ fontSize: "40px" }}>
+                <Typography sx={{ fontSize: "40px", fontWeight: "bold" }}>
                   {dataList.length}
                 </Typography>
               </Box>
-              <DataGrid
-                ref={dataGridRef}
-                rows={rows}
-                columns={columns}
-                components={{
-                  Footer: () => null, // Hide the footer
-                }}
-                sx={{
-                  "& .MuiDataGrid-columnHeader": {
-                    fontSize: "30px", // Change header font size
-                  },
-                  "& .MuiDataGrid-cell": {
-                    fontSize: "30px", // Change cell font size
-                  },
-                }}
-              />
+              <Box ref={dataGridRef}>
+                <DataGrid
+                  rows={dataList}
+                  columns={columns}
+                  components={{
+                    Footer: () => null, // Hide the footer
+                  }}
+                  sx={{
+                    height: "90vh",
+                    width: "100%",
+                    scrollbarWidth: "none", // Firefox
+                    msOverflowStyle: "none", // IE 10+
+                    "& .MuiDataGrid-columnHeader": {
+                      fontSize: "30px", // Change header font size
+                    },
+                    "& .MuiDataGrid-cell": {
+                      fontSize: "30px", // Change cell font size
+                    },
+                  }}
+                />
+              </Box>
             </CustomDataGridStyles>
           </Box>
         )}
-
         {showData && (
           <Box
             sx={{
@@ -302,6 +449,24 @@ const Attendance = () => {
               height: "calc(100vh - 100px)",
             }}
           >
+            {isPlaying && (
+              <video
+                ref={videoRef}
+                src={birthday}
+                muted
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  minWidth: "100%",
+                  minHeight: "100%",
+                  width: "auto",
+                  height: "auto",
+                  zIndex: -1,
+                  transform: "translate(-50%, -50%)",
+                }}
+              />
+            )}
             {/* Left Side: Profile Picture */}
             <Box
               sx={{
@@ -459,7 +624,7 @@ const Attendance = () => {
                           key={index}
                           sx={{ fontSize: "50px", color: "red" }}
                         >
-                          {v.ViolationListLocal.description}
+                          {v.ViolationList.description}
                         </Box>
                       ))}
                     </Box>

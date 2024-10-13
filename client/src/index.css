@@ -175,3 +175,18 @@ body,
     color: white; /* Optional: change text color for better visibility */
   }
 }
+
+.blink.birthday {
+  color: red;
+  animation: blink-birthday 1s steps(5, start) infinite;
+}
+
+@keyframes blink-birthday {
+  0%,
+  100% {
+    visibility: visible;
+  }
+  50% {
+    visibility: hidden;
+  }
+}
