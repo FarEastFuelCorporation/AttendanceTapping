@@ -75,7 +75,7 @@ const apiRoutes = require("./routes/api");
 app.use("/api", apiRoutes);
 // app.use(syncronize);
 
-const sequelize = require("./config/database");
+// const sequelize = require("./config/database");
 const localDb = require("./config/databaseLocal");
 
 // Function to initialize the application
@@ -84,7 +84,7 @@ async function initializeApp() {
     console.log("Syncing models to the database...");
     // await sequelize.sync({ alter: true });
 
-    await localDb.sync({ alter: true });
+    // await localDb.sync({ alter: true });
     console.log("Models synced successfully.");
   } catch (error) {
     console.error("Error syncing models:", error);

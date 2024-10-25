@@ -270,9 +270,43 @@ async function syncViolationToLocal() {
   }
 }
 
-// Sync unsynced AttendanceLocal records to Attendance (realtime sync)
+// Function to sync unsynced AttendanceLocal records to Attendance
 async function syncUnsyncedAttendance() {
-  await syncToCloud(AttendanceLocal, Attendance);
+  try {
+    // Fetch unsynced records from AttendanceLocal
+    const unsyncedRecords = await AttendanceLocal.findAll({
+      where: { synced: false }, // Only get records that have not been synced
+    });
+
+    if (unsyncedRecords.length === 0) {
+      console.log("No unsynced attendance records found.");
+      return;
+    }
+
+    // Prepare data for bulk create without including the primary key
+    const recordsToSync = unsyncedRecords.map((record) => ({
+      employee_id: record.employee_id, // Only include necessary fields
+      status: record.status,
+      // No need to include `id` since it's auto-incremented
+    }));
+
+    // Perform bulk create in Attendance
+    await Attendance.bulkCreate(recordsToSync, {
+      ignoreDuplicates: true, // Prevent errors on primary key conflicts
+    });
+
+    // Mark these records as synced in AttendanceLocal
+    await AttendanceLocal.update(
+      { synced: true }, // Update the synced status
+      { where: { id: unsyncedRecords.map((record) => record.id) } } // Mark records as synced
+    );
+
+    console.log(
+      `Successfully synced ${recordsToSync.length} attendance records.`
+    );
+  } catch (error) {
+    console.error("Error during attendance sync:", error);
+  }
 }
 
 // Scheduled synchronization using cron
