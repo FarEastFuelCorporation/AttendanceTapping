@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { ColorModeContext, tokens } from "../theme";
 import {
   AppBar,
@@ -28,6 +28,7 @@ const Navbar = () => {
   const colorMode = useContext(ColorModeContext);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [currentTime, setCurrentTime] = useState("");
 
   // Check if the current route is either "/signup" or "/login"
   const isAuthPage =
@@ -59,6 +60,29 @@ const Navbar = () => {
     }
   };
 
+  // Function to get the current time in "08:05:25 PM" format
+  const getCurrentTime = () => {
+    const now = new Date();
+    return now.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    });
+  };
+
+  useEffect(() => {
+    // Set initial time
+    setCurrentTime(getCurrentTime());
+
+    // Update time every second
+    const intervalId = setInterval(() => {
+      setCurrentTime(getCurrentTime());
+    }, 1000);
+
+    return () => clearInterval(intervalId); // Cleanup interval on component unmount
+  }, []);
+
   return (
     <AppBar position="fixed">
       <Toolbar sx={{ padding: "10px" }}>
@@ -83,6 +107,13 @@ const Navbar = () => {
             FAR EAST FUEL CORPORATION
           </Typography>
         </Box>
+        {location.pathname === "/attendance" && (
+          <Box display="flex" alignItems="center" mr={2}>
+            <Typography variant="h6" sx={{ fontSize: "40px" }}>
+              {currentTime}
+            </Typography>
+          </Box>
+        )}
         <Box display="flex">
           <IconButton
             onClick={colorMode.toggleColorMode}
