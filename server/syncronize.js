@@ -13,30 +13,6 @@ const ViolationLocal = require("./modelsLocal/ViolationLocal");
 const ViolationList = require("./models/ViolationList");
 const ViolationListLocal = require("./modelsLocal/ViolationListLocal");
 
-// Function to insert new records into cloud tables
-async function syncToCloud(localModel, cloudModel, syncedField = "synced") {
-  try {
-    const unsyncedRecords = await localModel.findAll({
-      where: {
-        [syncedField]: false, // Assuming a 'synced' flag
-      },
-    });
-
-    for (const record of unsyncedRecords) {
-      console.log(`Syncing unsynced record with ID ${record.id}...`);
-      await cloudModel.create(record.toJSON());
-
-      // Mark the record as synced
-      await record.update({ [syncedField]: true });
-    }
-  } catch (error) {
-    console.error(
-      `Error syncing ${localModel.name} to ${cloudModel.name}:`,
-      error
-    );
-  }
-}
-
 // Function to sync `IdInformation` to `IdInformationLocal`
 async function syncIdInformationToLocal() {
   try {
