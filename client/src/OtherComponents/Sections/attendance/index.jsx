@@ -283,7 +283,7 @@ const Attendance = () => {
       headerName: "Employee ID",
       headerAlign: "center",
       align: "center",
-      width: 150,
+      width: 200,
     },
     {
       field: "employeeName",
@@ -320,7 +320,7 @@ const Attendance = () => {
       headerName: "Status",
       headerAlign: "center",
       align: "center",
-      width: 120,
+      width: 150,
     },
     // Add other fields as necessary
   ];
@@ -333,6 +333,7 @@ const Attendance = () => {
         height: "calc(100vh - 64px)",
         scrollbarWidth: "none", // Firefox
         msOverflowStyle: "none", // IE 10+
+        paddingTop: "100px",
       }}
     >
       {loading && <LoadingSpinner isLoading={loading} />}
@@ -352,7 +353,6 @@ const Attendance = () => {
 
       <Box
         sx={{
-          marginTop: "60px",
           left: 0,
           position: "relative",
           display: "flex",
