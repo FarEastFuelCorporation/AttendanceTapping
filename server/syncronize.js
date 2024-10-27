@@ -263,6 +263,8 @@ async function syncUnsyncedAttendance() {
     const recordsToSync = unsyncedRecords.map((record) => ({
       employee_id: record.employee_id, // Only include necessary fields
       status: record.status,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
       // No need to include `id` since it's auto-incremented
     }));
 
