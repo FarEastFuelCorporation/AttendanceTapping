@@ -18,6 +18,7 @@ import timeOutAudio from "../../../images/time-out.mp3"; // Renamed to avoid con
 import CustomDataGridStyles from "../../CustomDataGridStyles";
 import { formatTime } from "../../Functions";
 import { tokens, ColorModeContext } from "../../../theme";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 const isToday = (date) => {
   const today = new Date();
@@ -90,8 +91,6 @@ const Attendance = () => {
   useEffect(() => {
     if (isDayTime) {
       colorMode.toggleColorMode(); // Toggle to light mode if daytime
-    } else {
-      colorMode.toggleColorMode(); // Toggle to dark mode if nighttime
     }
   }, [isDayTime, colorMode]);
 
@@ -327,6 +326,8 @@ const Attendance = () => {
 
   const today = new Date();
 
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   return (
     <Box
       sx={{
@@ -408,10 +409,20 @@ const Attendance = () => {
                   marginTop: "-40px",
                 }}
               >
-                <Typography sx={{ fontSize: "40px", fontWeight: "bold" }}>
+                <Typography
+                  sx={{
+                    fontSize: `${isMobile ? "20px" : "40px"}`,
+                    fontWeight: "bold",
+                  }}
+                >
                   Employee On Duty
                 </Typography>
-                <Typography sx={{ fontSize: "40px", fontWeight: "bold" }}>
+                <Typography
+                  sx={{
+                    fontSize: `${isMobile ? "20px" : "40px"}`,
+                    fontWeight: "bold",
+                  }}
+                >
                   {dataList.length}
                 </Typography>
               </Box>
