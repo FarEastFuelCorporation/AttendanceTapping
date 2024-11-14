@@ -18,6 +18,7 @@ import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import MenuIcon from "@mui/icons-material/Menu";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 const Navbar = () => {
   const apiUrl = process.env.REACT_APP_API_URL;
@@ -35,9 +36,6 @@ const Navbar = () => {
     location.pathname === "/signup" ||
     location.pathname === "/login" ||
     location.pathname === "/";
-
-  const segments = location.pathname.split("/");
-  const client = segments[1] === "certificate";
 
   const handleLogout = async () => {
     try {
@@ -83,6 +81,8 @@ const Navbar = () => {
     return () => clearInterval(intervalId); // Cleanup interval on component unmount
   }, []);
 
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   return (
     <AppBar position="fixed">
       <Toolbar sx={{ padding: "10px" }}>
@@ -107,7 +107,7 @@ const Navbar = () => {
             FAR EAST FUEL CORPORATION
           </Typography>
         </Box>
-        {location.pathname === "/attendance" && (
+        {location.pathname === "/attendance" && !isMobile && (
           <Box display="flex" alignItems="center" mr={2}>
             <Typography variant="h6" sx={{ fontSize: "40px" }}>
               {currentTime}
@@ -126,7 +126,7 @@ const Navbar = () => {
             )}
           </IconButton>
         </Box>
-        {!isAuthPage && !client ? (
+        {!isAuthPage && location.pathname !== "/attendance" && (
           <Box display="flex" gap={2}>
             <Button onClick={handleLogout} color="inherit">
               <Typography variant="h5" style={{ marginLeft: "10px" }}>
@@ -134,7 +134,8 @@ const Navbar = () => {
               </Typography>
             </Button>
           </Box>
-        ) : (
+        )}
+        {isAuthPage && (
           <>
             <Box sx={{ display: { xs: "none", md: "flex" } }} gap={2}>
               <Button component={Link} to="/" color="inherit">
