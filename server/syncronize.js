@@ -289,17 +289,17 @@ async function syncUnsyncedAttendance() {
 
 // Scheduled synchronization using cron
 // Sync IdInformation to IdInformationLocal at 9 PM every day
-cron.schedule("0 21 * * *", async () => {
-  console.log("Running syncIdInformationToLocal at 9 PM");
-  await syncIdInformationToLocal();
-});
+// cron.schedule("0 21 * * *", async () => {
+//   console.log("Running syncIdInformationToLocal at 9 PM");
+//   await syncIdInformationToLocal();
+// });
 
 // Sync ViolationList and Violation at 5 AM, 1 PM, 4 PM, and 5 PM every day
-cron.schedule("0 5,13,16,17 * * *", async () => {
-  console.log("Running syncViolationListToLocal and syncViolationToLocal");
-  await syncViolationListToLocal();
-  await syncViolationToLocal();
-});
+// cron.schedule("0 5,13,16,17 * * *", async () => {
+//   console.log("Running syncViolationListToLocal and syncViolationToLocal");
+//   await syncViolationListToLocal();
+//   await syncViolationToLocal();
+// });
 
 async function handleAttendanceSync() {
   console.log("Syncing unsynced attendance records in real-time");
