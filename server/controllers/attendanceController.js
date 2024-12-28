@@ -26,45 +26,56 @@ async function submitAttendance(req, res) {
       status = "TIME-OUT";
     }
 
-    // Insert the attendance information into the attendance table
-    const attendance = await AttendanceLocal.create({
-      employee_id: employeeId,
-      status: status,
-    });
-
     // Retrieve employee data
     const employeeData = await IdInformationLocal.findOne({
       where: { employee_id: employeeId },
-    });
-
-    // Retrieve violation data for the employee if it exists
-    const violations = await ViolationLocal.findAll({
-      where: { employee_id: employeeId },
-      include: [
-        {
-          model: ViolationListLocal,
-          as: "ViolationListLocal", // Specify the alias used in the association
-        },
+      attributes: [
+        "id",
+        "first_name",
+        "middle_name",
+        "last_name",
+        "designation",
+        "birthday",
+        "profile_picture",
       ],
     });
 
-    // Assuming you have the profile picture Buffer in the `employeeData` object
-    const profilePictureBuffer = employeeData.profile_picture;
+    let attendance, violations, picture;
 
-    // Convert the Buffer to a Base64 data URL
-    const profilePictureBase64 = profilePictureBuffer.toString("base64");
+    if (employeeData) {
+      // Insert the attendance information into the attendance table
+      attendance = await AttendanceLocal.create({
+        employee_id: employeeId,
+        status: status,
+      });
+      // Retrieve violation data for the employee if it exists
+      violations = await ViolationLocal.findAll({
+        where: { employee_id: employeeId },
+        include: [
+          {
+            model: ViolationListLocal,
+            as: "ViolationListLocal", // Specify the alias used in the association
+          },
+        ],
+      });
+      // Assuming you have the profile picture Buffer in the `employeeData` object
+      const profilePictureBuffer = employeeData.profile_picture;
 
-    // Add the Base64 data URL to the employeeData object
-    const picture = `data:image/png;base64,${profilePictureBase64}`;
+      // Convert the Buffer to a Base64 data URL
+      const profilePictureBase64 = profilePictureBuffer.toString("base64");
+
+      // Add the Base64 data URL to the employeeData object
+      picture = `data:image/png;base64,${profilePictureBase64}`;
+    }
 
     handleAttendanceSync();
 
     // Render the view with attendance, employee data, violations, and updated safety man-hours
     res.json({
       attendance,
+      violations,
       employeeData,
       picture,
-      violations,
     });
   } catch (error) {
     // Handle errors and send an error response

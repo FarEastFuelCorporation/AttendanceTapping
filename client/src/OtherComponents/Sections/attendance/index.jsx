@@ -131,7 +131,7 @@ const Attendance = () => {
         setShowDataList(false);
         setShowData(true);
 
-        const birthday = new Date(response.data.employeeData.birthday);
+        const birthday = new Date(response.data.employeeData?.birthday);
         if (isToday(birthday)) {
           setIsBirthday(true);
           setShowVideo(true);
@@ -583,10 +583,10 @@ const Attendance = () => {
                       fontWeight: "bold",
                     }}
                   >
-                    {employeeData.last_name},<br />
-                    {employeeData.first_name}
+                    {employeeData?.last_name},<br />
+                    {employeeData?.first_name}
                     <br />
-                    {employeeData.middle_name}
+                    {employeeData?.middle_name}
                   </Typography>
                 </Box>
 
@@ -602,7 +602,7 @@ const Attendance = () => {
                       fontWeight: "bold",
                     }}
                   >
-                    {employeeData.designation}
+                    {employeeData?.designation}
                   </Typography>
                 </Box>
 
