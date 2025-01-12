@@ -48,6 +48,7 @@ async function submitAttendance(req, res) {
         employee_id: employeeId,
         status: status,
       });
+
       // Retrieve violation data for the employee if it exists
       violations = await ViolationLocal.findAll({
         where: { employee_id: employeeId },
@@ -58,17 +59,21 @@ async function submitAttendance(req, res) {
           },
         ],
       });
-      // Assuming you have the profile picture Buffer in the `employeeData` object
-      const profilePictureBuffer = employeeData.profile_picture;
 
-      // Convert the Buffer to a Base64 data URL
-      const profilePictureBase64 = profilePictureBuffer.toString("base64");
-
-      // Add the Base64 data URL to the employeeData object
-      picture = `data:image/png;base64,${profilePictureBase64}`;
+      // Handle profile picture conversion safely
+      if (employeeData.profile_picture) {
+        const profilePictureBuffer = employeeData.profile_picture;
+        const profilePictureBase64 = profilePictureBuffer.toString("base64");
+        picture = `data:image/png;base64,${profilePictureBase64}`;
+      }
     }
 
-    handleAttendanceSync();
+    // Handle attendance synchronization safely
+    try {
+      handleAttendanceSync(); // Wrap in try-catch block
+    } catch (syncError) {
+      console.error("Error syncing attendance:", syncError);
+    }
 
     // Render the view with attendance, employee data, violations, and updated safety man-hours
     res.json({

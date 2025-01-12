@@ -77,6 +77,10 @@ app.use("/api", apiRoutes);
 
 // const sequelize = require("./config/database");
 const localDb = require("./config/databaseLocal");
+const {
+  syncIdInformationToLocal,
+  syncSpecificEmployeeToLocal,
+} = require("./syncronize");
 
 // Function to initialize the application
 async function initializeApp() {
@@ -91,6 +95,8 @@ async function initializeApp() {
   }
 }
 
+// syncSpecificEmployeeToLocal(25001);
+// syncIdInformationToLocal();
 // Call the function to initialize the application
 initializeApp();
 
